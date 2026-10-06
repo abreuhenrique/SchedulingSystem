@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class SchedulingService {
@@ -59,6 +60,14 @@ public class SchedulingService {
                 .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado"));
         s.setStatus(StatusScheduling.COMPLETED);
         return SchedulingMapper.toResponse(s);
+    }
+
+    @Transactional
+    public List<SchedulingResponse> listAll() {
+        List<Scheduling> s = repository.findAll();
+        return s.stream()
+                .map(SchedulingMapper::toResponse)
+                .toList();
     }
 
     @Transactional

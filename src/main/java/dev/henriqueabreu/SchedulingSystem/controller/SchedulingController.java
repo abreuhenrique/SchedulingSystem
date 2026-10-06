@@ -7,6 +7,8 @@ import dev.henriqueabreu.SchedulingSystem.service.SchedulingService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/scheduling")
 public class SchedulingController {
@@ -15,6 +17,11 @@ public class SchedulingController {
 
     public SchedulingController(SchedulingService service) {
         this.service = service;
+    }
+
+    @GetMapping
+    public List<SchedulingResponse> listAll() {
+        return service.listAll();
     }
 
     @GetMapping("/{id}")
