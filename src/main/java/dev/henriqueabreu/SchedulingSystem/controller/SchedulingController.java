@@ -29,17 +29,13 @@ public class SchedulingController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> findById(@PathVariable Long id) {
-        if (service.findById(id) != null) {
-            return ResponseEntity.status(HttpStatus.FOUND).body(service.findById(id));
-        } else {
-            return ResponseEntity.badRequest().body("Agendamento não encontrado.");
-        }
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<String> create(@Valid @RequestBody SchedulingCreateRequest req) {
-        service.create(req);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Agendamento adicionado com sucesso!");
+    public ResponseEntity<SchedulingResponse> create(@Valid @RequestBody SchedulingCreateRequest req) {
+        SchedulingResponse scheduling = service.create(req);
+        return ResponseEntity.status(HttpStatus.CREATED).body(scheduling);
     }
 
     @PatchMapping("/{id}")

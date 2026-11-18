@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @ControllerAdvice
-public class ResExceptionHandler extends ResponseEntityExceptionHandler {
+public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(SchedulingNotFoundException.class)
     private ResponseEntity<RestErrorMessage> schedulingNotFoundHandler(SchedulingNotFoundException exception) {
@@ -17,6 +17,7 @@ public class ResExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(threatResponse);
     }
 
+    @ExceptionHandler(IntervalInvalidException.class)
     private ResponseEntity<RestErrorMessage> intervalInvalidException(IntervalInvalidException exception) {
         RestErrorMessage threatErrorMessage = new RestErrorMessage(HttpStatus.CONFLICT, exception.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(threatErrorMessage);

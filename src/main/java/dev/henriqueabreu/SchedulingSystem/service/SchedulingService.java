@@ -3,11 +3,12 @@ package dev.henriqueabreu.SchedulingSystem.service;
 import dev.henriqueabreu.SchedulingSystem.dto.SchedulingCreateRequest;
 import dev.henriqueabreu.SchedulingSystem.dto.SchedulingResponse;
 import dev.henriqueabreu.SchedulingSystem.dto.SchedulingUpdateRequest;
+import dev.henriqueabreu.SchedulingSystem.exceptions.IntervalInvalidException;
+import dev.henriqueabreu.SchedulingSystem.exceptions.SchedulingNotFoundException;
 import dev.henriqueabreu.SchedulingSystem.mapper.SchedulingMapper;
 import dev.henriqueabreu.SchedulingSystem.model.Scheduling;
 import dev.henriqueabreu.SchedulingSystem.model.StatusScheduling;
 import dev.henriqueabreu.SchedulingSystem.repository.SchedulingRepository;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ public class SchedulingService {
     public SchedulingResponse create(@Valid SchedulingCreateRequest req) {
 
         validadeInterval(req.startDate(), req.endDate());
-        checkConflict(req.customer(), req.startDate(), req.endDate(), null);
+        checkConflict(req.startDate(), req.endDate(), null);
 
         Scheduling scheduling = SchedulingMapper.toEntity(req);
         repository.save(scheduling);
@@ -38,10 +39,10 @@ public class SchedulingService {
     @Transactional
     public SchedulingResponse update(Long id, @Valid SchedulingUpdateRequest req) {
         Scheduling s = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException ("Agendamento não encontrado"));
+                .orElseThrow(SchedulingNotFoundException::new);
         SchedulingMapper.merge(s, req);
-        validadeInterval(req.startDate(), req.endDate());
-        checkConflict(s.getCustomer(), req.startDate(), req.endDate(), s.getId());
+        validadeInterval(s.getStartDate(), s.getEndDate());
+        checkConflict(s.getStartDate(), s.getEndDate(), s.getId());
         s = repository.save(s);
         return SchedulingMapper.toResponse(s);
     }
@@ -49,7 +50,7 @@ public class SchedulingService {
     @Transactional
     public SchedulingResponse cancel(Long id) {
         Scheduling s = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado"));
+                .orElseThrow(SchedulingNotFoundException::new);
         s.setStatus(StatusScheduling.CANCELED);
         return SchedulingMapper.toResponse(s);
     }
@@ -57,7 +58,7 @@ public class SchedulingService {
     @Transactional
     public SchedulingResponse complete(Long id) {
         Scheduling s = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado"));
+                .orElseThrow(SchedulingNotFoundException::new);
         s.setStatus(StatusScheduling.COMPLETED);
         return SchedulingMapper.toResponse(s);
     }
@@ -73,19 +74,19 @@ public class SchedulingService {
     @Transactional
     public SchedulingResponse findById(Long id) {
         Scheduling s = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado"));
+                .orElseThrow(SchedulingNotFoundException::new);
         return SchedulingMapper.toResponse(s);
     }
 
     private void validadeInterval(LocalDateTime startDate, LocalDateTime endDate) {
-        if (startDate == null || endDate == null || startDate.isAfter(endDate)) {
-            throw new IllegalArgumentException("Intervalo inválido: A data de Início deve ser anterior a data de Fim");
+        if (startDate == null || endDate == null || startDate.isAfter(endDate) || startDate.isEqual(endDate)) {
+            throw new IntervalInvalidException();
         }
     }
 
-    private void checkConflict(String customer, LocalDateTime startDate, LocalDateTime endDate, Long id) {
-        if (repository.existsConflict(customer, startDate, endDate, id)) {
-            throw new IllegalArgumentException("Conflito na agenda: já existe um agendamento nesse período");
+    private void checkConflict(LocalDateTime startDate, LocalDateTime endDate, Long id) {
+        if (repository.existsConflict(startDate, endDate, id)) {
+            throw new IntervalInvalidException();
         }
     }
 }
