@@ -12,13 +12,11 @@ public interface SchedulingRepository extends JpaRepository<Scheduling, Long> {
     @Query("""
         SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END
             FROM Scheduling s
-            WHERE s.customer = :customer
-                AND s.status = dev.henriqueabreu.SchedulingSystem.model.StatusScheduling.SCHEDULED
+            WHERE s.status = dev.henriqueabreu.SchedulingSystem.model.StatusScheduling.SCHEDULED
                 AND (s.startDate < :end AND s.endDate > :start)
-                AND (:ignoreId is NULL OR s.id <> : ignoreId)
+                AND (:ignoreId is NULL OR s.id <> :ignoreId)
     """)
-    boolean existsConflict(@Param("customer") String customer,
-                           @Param("start")LocalDateTime start,
+    boolean existsConflict(@Param("start")LocalDateTime start,
                            @Param("end")LocalDateTime end,
                            @Param("ignoreId")Long ignoreId);
 
